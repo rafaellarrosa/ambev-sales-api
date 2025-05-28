@@ -2,6 +2,7 @@
 using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.GetAllSales;
 
@@ -12,22 +13,27 @@ public class GetAllSalesHandler : IRequestHandler<GetAllSalesQuery, IEnumerable<
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<GetAllSalesHandler> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetAllSalesHandler"/> class.
     /// </summary>
-    /// <param name="saleRepository">The sale repository.</param>
-    /// <param name="mapper">The AutoMapper instance.</param>
-    public GetAllSalesHandler(ISaleRepository saleRepository, IMapper mapper)
+    public GetAllSalesHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<GetAllSalesHandler> logger)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <inheritdoc/>
     public async Task<IEnumerable<SaleResult>> Handle(GetAllSalesQuery request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Handling GetAllSalesQuery");
+
         var sales = await _saleRepository.GetAllAsync(cancellationToken);
+
+        _logger.LogInformation("{Count} sales retrieved", sales.Count());
+
         return _mapper.Map<IEnumerable<SaleResult>>(sales);
     }
 }

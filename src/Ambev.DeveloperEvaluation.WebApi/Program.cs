@@ -52,6 +52,16 @@ public class Program
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+            // Configure Serilog
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+                .ReadFrom.Configuration(builder.Configuration) // Opcional, se quiser configurar via appsettings
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
+            
             var app = builder.Build();
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
