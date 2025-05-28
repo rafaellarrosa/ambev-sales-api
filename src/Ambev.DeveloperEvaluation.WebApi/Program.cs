@@ -8,6 +8,8 @@ using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Rebus.Config;
+using Rebus.Transport.FileSystem;
 using Serilog;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
@@ -34,6 +36,10 @@ public class Program
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM")
                 )
+            );
+            
+            builder.Services.AddRebus(configure => configure
+                .Transport(t => t.UseFileSystem(@"C:\rebus-queue", "developer-evaluation-queue"))
             );
 
             builder.Services.AddJwtAuthentication(builder.Configuration);

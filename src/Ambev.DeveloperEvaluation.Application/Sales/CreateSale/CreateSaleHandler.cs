@@ -39,7 +39,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     public async Task<CreateSaleResult> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting CreateSaleHandler with Request: {Request}", request);
-        
+
         var validator = new CreateSaleCommandValidator();
         var validation = await validator.ValidateAsync(request, cancellationToken);
 
@@ -56,12 +56,11 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
         await _bus.Publish(new SaleCreatedEvent(createdSale.Id, createdSale.Customer, createdSale.SaleDate));
-        
+
         var result = _mapper.Map<CreateSaleResult>(createdSale);
-        
+
         _logger.LogInformation("Sale created successfully with Id {SaleId}", sale.Id);
-        
+
         return result;
     }
-
 }
