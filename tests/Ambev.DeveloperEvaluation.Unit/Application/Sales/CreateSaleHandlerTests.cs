@@ -4,6 +4,7 @@ using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.Sales.TestData;
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Rebus.Bus;
 using Xunit;
@@ -17,6 +18,7 @@ public class CreateSaleHandlerTests
 {
     private readonly ISaleRepository _saleRepository;
     private readonly CreateSaleHandler _handler;
+    private readonly ILogger<CreateSaleHandler> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateSaleHandlerTests"/> class.
@@ -26,10 +28,12 @@ public class CreateSaleHandlerTests
     {
         var bus = Substitute.For<IBus>();
         _saleRepository = Substitute.For<ISaleRepository>();
-        var configuration = new MapperConfiguration(cfg => cfg.AddProfile<CreateSaleProfile>());
+        _logger = Substitute.For<ILogger<CreateSaleHandler>>();
 
+        var configuration = new MapperConfiguration(cfg => cfg.AddProfile<CreateSaleProfile>());
         var mapper = configuration.CreateMapper();
-        _handler = new CreateSaleHandler(_saleRepository, mapper, bus);
+
+        _handler = new CreateSaleHandler(_saleRepository, mapper, bus, _logger);
     }
 
     /// <summary>
@@ -50,7 +54,14 @@ public class CreateSaleHandlerTests
         // Then
         createSaleResult.Should().NotBeNull();
         createSaleResult.Id.Should().NotBeEmpty();
+
         await _saleRepository.Received(1).CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
+        _logger.Received().Log(
+            LogLevel.Information,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("Starting CreateSaleHandler")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
     }
 
     /// <summary>
@@ -86,5 +97,12 @@ public class CreateSaleHandlerTests
 
         // Then
         await _saleRepository.Received(1).CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
+
+        _logger.Received().Log(
+            LogLevel.Information,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("Sale created successfully")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
     }
 }
